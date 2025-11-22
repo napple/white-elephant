@@ -1,23 +1,38 @@
-# White Elephant Simulation and Visualization Scripts
+# White Elephant Gift Exchange Simulator
 
-## Overview
+## 🎁 Interactive HTML Version (Recommended)
 
-This package contains Python scripts to simulate White Elephant gift exchange games and create comprehensive visualizations of the game flow.
+**Try the interactive web-based simulator first!**
 
-## Files Included
+Open `index.html` in any modern web browser to access the full-featured White Elephant simulator with:
 
-This package provides:
-- **White Elephant simulation** - Complete game simulation with AI players
-- **Matrix visualization** - Round-by-round game state visualization
-- **Command-line tools** - Easy-to-use scripts via pip install
+- **🎮 Interactive Controls**: Run simulations, step through turns, or auto-play
+- **📊 Real-time Matrix Visualization**: Watch the game state evolve with color-coded gift status
+- **🎯 Live Game Log**: See every action with emoji indicators and steal transitions
+- **📈 Game Statistics**: Track total actions, steals, locked gifts, and more
+- **🎄 Christmas Theme**: Festive colors and styling perfect for the holidays
+- **📱 Responsive Design**: Works on desktop, tablet, and mobile devices
 
-## Installation
+### Quick Start
+1. Download or clone this repository
+2. Open `index.html` in your web browser
+3. Click "🎮 Run New Simulation" to start!
 
-### Requirements
+No installation required - works entirely in your browser.
+
+---
+
+## 🐍 Python Command-Line Tools (Alternative)
+
+For those who prefer command-line tools or want to integrate with other Python workflows, this package also includes Python scripts to simulate White Elephant games and create visualizations.
+
+### Installation
+
+#### Requirements
 - Python 3.8 or higher
 - pip (Python package manager)
 
-### Install from Source
+#### Install from Source
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -30,9 +45,9 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-## How to Use
+### Python Usage
 
-### 1. Run a Simulation
+#### 1. Run a Simulation
 
 The simulation script generates a random game and creates several visualizations:
 
@@ -61,7 +76,7 @@ python -m white_elephant.simulation -o /path/to/output
 - Validation that all players have gifts and all gifts are opened
 - Final results showing who ended with what
 
-### 2. Create Matrix Visualization
+#### 2. Create Matrix Visualization
 
 After running the simulation, create the detailed round-by-round matrix:
 
@@ -333,22 +348,40 @@ def steal_decision(current_player, available_gifts, opened_gifts, just_stolen_gi
         steal_chance = 0.3  # 30% chance to steal low-value
 ```
 
-## Tips for Best Results
+## 💡 Tips for Best Results
 
 ### For Game Night
 
+**🌐 HTML Version (Recommended):**
+1. **Project the interactive simulator**: Open `index.html` on a large screen or projector
+2. **Use step-by-step mode**: Click through each action as your real game progresses
+3. **Track live gameplay**: Use the matrix to follow along with your actual White Elephant game
+4. **Take screenshots**: Capture the final state as a digital souvenir
+
+**🐍 Python Version:**
 1. **Print the rules**: Use `white_elephant_rules.md`
 2. **Project the matrix**: Use `white_elephant_matrix.png` on a screen to track the game live
 3. **Keep it as a souvenir**: Save all visualizations after the game
 
 ### For Analysis
 
+**🌐 HTML Version:**
+1. **Run multiple simulations**: Use the reset button to generate different outcomes
+2. **Use auto-play**: Quickly see full game progressions
+3. **Study the matrix**: Watch patterns emerge in real-time
+
+**🐍 Python Version:**
 1. Run multiple simulations to see different outcomes
 2. Compare steal patterns across games
 3. Analyze which gift values tend to lock most often
 
 ### For Presentations
 
+**🌐 HTML Version:**
+1. **Interactive demos**: Show live simulations during presentations
+2. **Step-by-step walkthroughs**: Use manual stepping to control pacing
+
+**🐍 Python Version:**
 1. Use `white_elephant_simulation.png` for summary slides
 2. Use `white_elephant_turn_summary.png` for quick overview
 3. Use `white_elephant_matrix.png` for detailed analysis
