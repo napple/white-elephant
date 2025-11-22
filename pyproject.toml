@@ -8,7 +8,37 @@ requires-python = ">=3.8"
 authors = [
     { name = "Nathan Apple", email = "nathan.apple@gmail.com" },
 ]
+dependencies = [
+    "matplotlib>=3.5.0",
+    "numpy>=1.20.0",
+]
+
+[project.scripts]
+white-elephant-sim = "white_elephant.simulation:main"
+white-elephant-matrix = "white_elephant.matrix:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "flake8>=4.0.0",
+]
 
 [build-system]
 requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "tests"]
