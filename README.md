@@ -9,7 +9,6 @@ This package contains Python scripts to simulate White Elephant gift exchange ga
 1. **white_elephant_rules.md** - Complete game rules and strategy guide
 2. **white_elephant_sim.py** - Main simulation script
 3. **create_matrix_viz.py** - Creates the round-by-round matrix visualization
-4. **create_gift_journeys.py** - Creates individual gift journey timelines
 
 ## Requirements
 
@@ -60,17 +59,6 @@ python create_matrix_viz.py
 - Large, readable text (size 28 for labels)
 - Clear turn separators
 - Comprehensive legend with color boxes
-
-### 3. Create Gift Journeys
-
-Optional - creates a timeline for each individual gift:
-
-```bash
-python create_gift_journeys.py
-```
-
-**What it creates:**
-- `white_elephant_gift_journeys.png` - Individual timelines for all 8 gifts
 
 ## Script Details
 
@@ -147,21 +135,6 @@ cell_width = 2.0
 **Output Files:**
 - `white_elephant_matrix.png` - Complete matrix (can be very tall!)
 
-### create_gift_journeys.py
-
-**Purpose:** Creates timeline visualizations for each gift's journey through the game.
-
-**Key Features:**
-- 8 separate panels (one per gift)
-- Shows every unwrap and steal event
-- Green boxes for unwraps
-- Orange/red boxes for steals
-- Indicates final owner
-- Shows total steal count
-
-**Output Files:**
-- `white_elephant_gift_journeys.png` - All gift journeys in one image
-
 ## Understanding the Visualizations
 
 ### Matrix Visualization
@@ -186,15 +159,6 @@ cell_width = 2.0
 **Turn Separators:**
 - Yellow banners mark the start of each player's turn
 - Extra spacing between turns for clarity
-
-### Gift Journeys Visualization
-
-**Reading the Journeys:**
-- Each panel shows one gift's complete story
-- Read from top to bottom (chronological)
-- Green = Unwrap event
-- Orange/Red = Steal event (red if 3rd steal)
-- Blue = Final owner
 
 ## Troubleshooting
 
