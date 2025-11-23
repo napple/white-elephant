@@ -315,6 +315,7 @@ class UIController {
         this.resetBtn.addEventListener('click', () => this.reset());
         this.movementTab.addEventListener('click', () => this.switchTab('movement'));
         this.matrixTab.addEventListener('click', () => this.switchTab('matrix'));
+        window.addEventListener('resize', () => this.handleResize());
     }
     
     runSimulation() {
@@ -874,6 +875,17 @@ class UIController {
                     </td>
                 </tr>
             `;
+        }
+    }
+    
+    handleResize() {
+        // Only redraw arrows if we have simulation data and are on the movement tab
+        if (this.simulator.actionStates.length > 0 && this.movementTabContent.classList.contains('active')) {
+            // Use timeout to allow DOM to settle after resize
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+                this.createAllStealArrows();
+            }, 100);
         }
     }
 }
