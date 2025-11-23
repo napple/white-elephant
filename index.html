@@ -378,6 +378,176 @@
             display: none;
         }
         
+        .gift-movement-panel {
+            width: 100%;
+            padding: 30px;
+            background: #fbf7ef;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .gift-movement-container {
+            position: relative;
+            background: white;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .movement-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px 15px 90px;
+            border-bottom: 2px solid #782832;
+            margin-bottom: 15px;
+            position: sticky;
+            top: 0;
+            background: #fbf7ef;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .player-header-cell {
+            background: #782832;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            flex: 1;
+            text-align: center;
+            margin: 0 2px;
+            min-width: 0;
+        }
+        
+        .movement-rows {
+            position: relative;
+        }
+        
+        .movement-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            min-height: 50px;
+            position: relative;
+        }
+        
+        .action-label {
+            width: 80px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #782832;
+            text-align: right;
+            margin-right: 10px;
+            flex-shrink: 0;
+            line-height: 1.1;
+            word-wrap: break-word;
+        }
+        
+        .gift-positions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            padding: 0 20px;
+        }
+        
+        .position-cell {
+            flex: 1;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 2px;
+            position: relative;
+        }
+        
+        .turn-separator {
+            height: 1px;
+            background: repeating-linear-gradient(
+                to right,
+                #782832 0px,
+                #782832 4px,
+                transparent 4px,
+                transparent 8px
+            );
+            margin: 8px 0;
+            opacity: 0.5;
+        }
+        
+        .gift-token {
+            background: #e8f3ea;
+            border: 2px solid #386641;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #386641;
+            min-width: 35px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .gift-token.stolen-once {
+            background: #d2e6d6;
+        }
+        
+        .gift-token.stolen-twice {
+            background: #bbdac1;
+        }
+        
+        .gift-token.locked {
+            background: #f6b3ba;
+            border-color: #782832;
+            color: #782832;
+        }
+        
+        .gift-token.highlighted {
+            animation: gift-highlight-pulse 2s ease-in-out;
+            transform: scale(1.1);
+            border-width: 4px !important;
+        }
+        
+        @keyframes gift-highlight-pulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 3px #c9182c; 
+                transform: scale(1.1);
+            }
+            50% { 
+                box-shadow: 0 0 0 6px #c9182c; 
+                transform: scale(1.15);
+            }
+        }
+        
+        .movement-arrow-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .steal-arrow {
+            stroke: #c9182c;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+            fill: none;
+        }
+        
+        .arrow-label {
+            fill: #c9182c;
+            font-size: 9px;
+            font-weight: 600;
+            text-anchor: middle;
+        }
+        
         @media (max-width: 768px) {
             .bottom-panels {
                 flex-direction: column;
@@ -420,6 +590,13 @@
         </div>
         
         <div class="main-content">
+            <div id="giftMovementPanel" class="gift-movement-panel hidden">
+                <h2 class="section-title">👥 Gift Movement Visualization</h2>
+                <div id="giftMovementContainer" class="gift-movement-container">
+                    <!-- Gift movement visualization will be populated here -->
+                </div>
+            </div>
+            
             <div class="matrix-panel">
                 <h2 class="section-title">📋 Game Matrix</h2>
                 <div id="matrixContainer" class="matrix-container">
