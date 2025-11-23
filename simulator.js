@@ -284,6 +284,7 @@ class UIController {
         
         this.initializeElements();
         this.bindEvents();
+        this.clearVisualizationContents();
         this.updateMatrix();
     }
     
@@ -299,6 +300,12 @@ class UIController {
         this.totalSteals = document.getElementById('totalSteals');
         this.lockedGifts = document.getElementById('lockedGifts');
         this.mostStolen = document.getElementById('mostStolen');
+        this.visualizationPanel = document.getElementById('visualizationPanel');
+        this.giftMovementContainer = document.getElementById('giftMovementContainer');
+        this.movementTab = document.getElementById('movementTab');
+        this.matrixTab = document.getElementById('matrixTab');
+        this.movementTabContent = document.getElementById('movementTabContent');
+        this.matrixTabContent = document.getElementById('matrixTabContent');
     }
     
     bindEvents() {
@@ -306,6 +313,8 @@ class UIController {
         this.stepBtn.addEventListener('click', () => this.stepForward());
         this.autoPlayBtn.addEventListener('click', () => this.toggleAutoPlay());
         this.resetBtn.addEventListener('click', () => this.reset());
+        this.movementTab.addEventListener('click', () => this.switchTab('movement'));
+        this.matrixTab.addEventListener('click', () => this.switchTab('matrix'));
     }
     
     runSimulation() {
@@ -313,7 +322,9 @@ class UIController {
         this.currentStateIndex = 0;
         
         this.updateGameLog(result);
+        this.initializeGiftMovementView();
         this.updateMatrix();
+        this.updateGiftMovementView();
         this.updateStats(result.stats);
         
         this.simulateBtn.disabled = true;
@@ -327,6 +338,7 @@ class UIController {
         if (this.currentStateIndex < this.simulator.actionStates.length - 1) {
             this.currentStateIndex++;
             this.updateMatrix();
+            this.updateGiftMovementView();
             this.scrollMatrixToBottom();
         }
         
@@ -382,6 +394,7 @@ class UIController {
         `;
         
         this.stats.classList.add('hidden');
+        this.clearVisualizationContents();
         this.updateMatrix();
     }
     
@@ -539,6 +552,329 @@ class UIController {
         setTimeout(() => {
             container.scrollTop = container.scrollHeight;
         }, 100);
+    }
+    
+    initializeGiftMovementView() {
+        this.giftMovementContainer.innerHTML = '';
+        
+        // Create header with player names
+        const header = document.createElement('div');
+        header.className = 'movement-header';
+        
+        for (let i = 1; i <= 8; i++) {
+            const playerCell = document.createElement('div');
+            playerCell.className = 'player-header-cell';
+            playerCell.textContent = `P${i}`;
+            header.appendChild(playerCell);
+        }
+        
+        this.giftMovementContainer.appendChild(header);
+        
+        // Create container for rows
+        const rowsContainer = document.createElement('div');
+        rowsContainer.className = 'movement-rows';
+        rowsContainer.id = 'movementRows';
+        
+        // Create SVG for arrows
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = 'movementArrowSvg';
+        svg.setAttribute('class', 'movement-arrow-svg');
+        
+        // Add arrow marker definition
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.id = 'arrowhead';
+        marker.setAttribute('markerWidth', '8');
+        marker.setAttribute('markerHeight', '6');
+        marker.setAttribute('refX', '7');
+        marker.setAttribute('refY', '3');
+        marker.setAttribute('orient', 'auto');
+        
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', '0 0, 8 3, 0 6');
+        polygon.setAttribute('fill', '#c9182c');
+        
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+        
+        rowsContainer.appendChild(svg);
+        this.giftMovementContainer.appendChild(rowsContainer);
+    }
+    
+    updateGiftMovementView() {
+        const rowsContainer = document.getElementById('movementRows');
+        const svg = document.getElementById('movementArrowSvg');
+        
+        if (!rowsContainer || !svg) return;
+        
+        // Clear existing rows and separators (except SVG)
+        const existingRows = rowsContainer.querySelectorAll('.movement-row, .turn-separator');
+        existingRows.forEach(row => row.remove());
+        
+        // Show states up to current index
+        for (let i = 0; i <= this.currentStateIndex; i++) {
+            const state = this.simulator.actionStates[i];
+            
+            // Add turn separator for turn start states
+            if (state.isTurnStart) {
+                this.createTurnSeparator(state.action);
+                continue;
+            }
+            
+            this.createMovementRow(state, i);
+        }
+        
+        // Create arrows for all steal transitions up to current state
+        this.createAllStealArrows();
+    }
+    
+    createMovementRow(state, stateIndex) {
+        const rowsContainer = document.getElementById('movementRows');
+        const svg = document.getElementById('movementArrowSvg');
+        
+        const row = document.createElement('div');
+        row.className = 'movement-row';
+        row.id = `movement-row-${stateIndex}`;
+        
+        // Action label
+        const actionLabel = document.createElement('div');
+        actionLabel.className = 'action-label';
+        actionLabel.textContent = this.getActionDescription(state.action);
+        row.appendChild(actionLabel);
+        
+        // Gift positions container
+        const positions = document.createElement('div');
+        positions.className = 'gift-positions';
+        
+        // Create 8 position cells (one for each player)
+        for (let playerNum = 1; playerNum <= 8; playerNum++) {
+            const cell = document.createElement('div');
+            cell.className = 'position-cell';
+            cell.id = `row-${stateIndex}-player-${playerNum}`;
+            
+            // Find all gifts owned by this player in this state
+            const playerGifts = [];
+            for (let giftId = 1; giftId <= 8; giftId++) {
+                const giftState = state.gifts[giftId];
+                if (giftState.owner === `P${playerNum}`) {
+                    playerGifts.push({ id: giftId, ...giftState });
+                }
+            }
+            
+            // Add gift tokens for this player
+            playerGifts.forEach(gift => {
+                const token = document.createElement('div');
+                token.className = 'gift-token';
+                token.id = `row-${stateIndex}-gift-${gift.id}`;
+                token.textContent = `G${gift.id}`;
+                
+                // Apply styling based on steal count
+                if (gift.locked) {
+                    token.classList.add('locked');
+                } else if (gift.steals === 2) {
+                    token.classList.add('stolen-twice');
+                } else if (gift.steals === 1) {
+                    token.classList.add('stolen-once');
+                }
+                
+                // Highlight if this is the changed gift
+                if (state.changedGiftId === gift.id) {
+                    token.classList.add('highlighted');
+                }
+                
+                cell.appendChild(token);
+            });
+            
+            positions.appendChild(cell);
+        }
+        
+        row.appendChild(positions);
+        
+        // Insert before the SVG
+        rowsContainer.insertBefore(row, svg);
+    }
+    
+    createTurnSeparator(actionText) {
+        const rowsContainer = document.getElementById('movementRows');
+        const svg = document.getElementById('movementArrowSvg');
+        
+        const separator = document.createElement('div');
+        separator.className = 'turn-separator';
+        
+        // Insert before the SVG
+        rowsContainer.insertBefore(separator, svg);
+    }
+    
+    createAllStealArrows() {
+        const svg = document.getElementById('movementArrowSvg');
+        const rowsContainer = document.getElementById('movementRows');
+        
+        // Clear existing arrows
+        const existingArrows = svg.querySelectorAll('.steal-arrow, .arrow-label');
+        existingArrows.forEach(arrow => arrow.remove());
+        
+        // Create arrows for all steal transitions up to current state
+        setTimeout(() => {
+            for (let i = 1; i <= this.currentStateIndex; i++) {
+                const state = this.simulator.actionStates[i];
+                
+                if (state.stealTransition && state.changedGiftId && !state.isTurnStart) {
+                    this.createStealArrowForState(state, i);
+                }
+            }
+        }, 150);
+    }
+    
+    createStealArrowForState(state, stateIndex) {
+        const svg = document.getElementById('movementArrowSvg');
+        const rowsContainer = document.getElementById('movementRows');
+        const fromPlayerNum = parseInt(state.stealTransition.from.replace('P', ''));
+        const toPlayerNum = parseInt(state.stealTransition.to.replace('P', ''));
+        const giftId = state.changedGiftId;
+        
+        try {
+            const containerRect = rowsContainer.getBoundingClientRect();
+            
+            // Find the previous action's row (the row before this steal)
+            let previousActionIndex = stateIndex - 1;
+            while (previousActionIndex >= 0 && this.simulator.actionStates[previousActionIndex].isTurnStart) {
+                previousActionIndex--;
+            }
+            
+            if (previousActionIndex < 0) return;
+            
+            // Get the rows
+            const currentRow = document.getElementById(`movement-row-${stateIndex}`);
+            const previousRow = document.getElementById(`movement-row-${previousActionIndex}`);
+            
+            if (!currentRow || !previousRow) return;
+            
+            // Get position of gift in previous row
+            const fromCell = previousRow.querySelector(`#row-${previousActionIndex}-player-${fromPlayerNum}`);
+            const fromToken = fromCell ? fromCell.querySelector(`[id*="gift-${giftId}"]`) : null;
+            
+            // Get position of gift in current row
+            const toCell = currentRow.querySelector(`#row-${stateIndex}-player-${toPlayerNum}`);
+            const toToken = toCell ? toCell.querySelector(`[id*="gift-${giftId}"]`) : null;
+            
+            if (!fromToken || !toToken) return;
+            
+            const fromRect = fromToken.getBoundingClientRect();
+            const toRect = toToken.getBoundingClientRect();
+            
+            // Calculate centers
+            const fromCenterX = fromRect.left - containerRect.left + fromRect.width / 2;
+            const fromCenterY = fromRect.top - containerRect.top + fromRect.height / 2;
+            const toCenterX = toRect.left - containerRect.left + toRect.width / 2;
+            const toCenterY = toRect.top - containerRect.top + toRect.height / 2;
+            
+            // Calculate arrow direction and shorten by moving endpoints inward
+            const dx = toCenterX - fromCenterX;
+            const dy = toCenterY - fromCenterY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            if (length === 0) return; // Same position, no arrow needed
+            
+            // Shorten arrow by 20 pixels on each end
+            const shortenBy = 20;
+            const unitX = dx / length;
+            const unitY = dy / length;
+            
+            const fromX = fromCenterX + unitX * shortenBy;
+            const fromY = fromCenterY + unitY * shortenBy;
+            const toX = toCenterX - unitX * shortenBy;
+            const toY = toCenterY - unitY * shortenBy;
+            
+            // Create straight arrow path
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const pathData = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+            
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', 'steal-arrow');
+            path.setAttribute('data-state', stateIndex);
+            
+            svg.appendChild(path);
+            
+            // Add label at the midpoint of the shortened arrow
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', (fromX + toX) / 2 + 8);
+            text.setAttribute('y', (fromY + toY) / 2 - 2);
+            text.setAttribute('class', 'arrow-label');
+            text.setAttribute('data-state', stateIndex);
+            text.textContent = `G${giftId}`;
+            
+            svg.appendChild(text);
+        } catch (error) {
+            console.warn('Error creating steal arrow for state', stateIndex, ':', error);
+        }
+    }
+    
+    getRowIndexFromId(rowId) {
+        return parseInt(rowId.replace('movement-row-', ''));
+    }
+    
+    getActionDescription(actionText) {
+        if (!actionText || actionText === '') return '';
+        
+        if (actionText.includes('unwraps')) {
+            // Extract player and gift info
+            const match = actionText.match(/(\w+) unwraps (G\d+)/);
+            if (match) {
+                return `${match[1]} opens ${match[2]}`;
+            }
+        } else if (actionText.includes('steals')) {
+            // Extract stealer and gift info
+            const match = actionText.match(/(\w+) steals (G\d+)/);
+            if (match) {
+                return `${match[1]} steals ${match[2]}`;
+            }
+        } else if (actionText.includes('Initial State')) {
+            return 'Start';
+        }
+        
+        // Fallback: return first few words
+        return actionText.split(' ').slice(0, 2).join(' ');
+    }
+    
+    switchTab(tabName) {
+        // Remove active class from all tabs and content
+        this.movementTab.classList.remove('active');
+        this.matrixTab.classList.remove('active');
+        this.movementTabContent.classList.remove('active');
+        this.matrixTabContent.classList.remove('active');
+        
+        // Add active class to selected tab and content
+        if (tabName === 'movement') {
+            this.movementTab.classList.add('active');
+            this.movementTabContent.classList.add('active');
+        } else if (tabName === 'matrix') {
+            this.matrixTab.classList.add('active');
+            this.matrixTabContent.classList.add('active');
+        }
+    }
+    
+    clearVisualizationContents() {
+        // Clear movement visualization
+        if (this.giftMovementContainer) {
+            this.giftMovementContainer.innerHTML = `
+                <div style="text-align: center; margin-top: 100px; color: #7f8c8d; font-size: 1.1rem;">
+                    🎁 Click "Run New Simulation" to see gift movements!
+                </div>
+            `;
+        }
+        
+        // Clear matrix content (matrix body will be cleared by updateMatrix)
+        const matrixBody = document.getElementById('matrixBody');
+        if (matrixBody) {
+            matrixBody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.1rem;">
+                        📋 Matrix will appear here after running a simulation
+                    </td>
+                </tr>
+            `;
+        }
     }
 }
 
