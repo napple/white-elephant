@@ -284,6 +284,7 @@ class UIController {
         
         this.initializeElements();
         this.bindEvents();
+        this.clearVisualizationContents();
         this.updateMatrix();
     }
     
@@ -299,8 +300,12 @@ class UIController {
         this.totalSteals = document.getElementById('totalSteals');
         this.lockedGifts = document.getElementById('lockedGifts');
         this.mostStolen = document.getElementById('mostStolen');
-        this.giftMovementPanel = document.getElementById('giftMovementPanel');
+        this.visualizationPanel = document.getElementById('visualizationPanel');
         this.giftMovementContainer = document.getElementById('giftMovementContainer');
+        this.movementTab = document.getElementById('movementTab');
+        this.matrixTab = document.getElementById('matrixTab');
+        this.movementTabContent = document.getElementById('movementTabContent');
+        this.matrixTabContent = document.getElementById('matrixTabContent');
     }
     
     bindEvents() {
@@ -308,6 +313,8 @@ class UIController {
         this.stepBtn.addEventListener('click', () => this.stepForward());
         this.autoPlayBtn.addEventListener('click', () => this.toggleAutoPlay());
         this.resetBtn.addEventListener('click', () => this.reset());
+        this.movementTab.addEventListener('click', () => this.switchTab('movement'));
+        this.matrixTab.addEventListener('click', () => this.switchTab('matrix'));
     }
     
     runSimulation() {
@@ -325,7 +332,6 @@ class UIController {
         this.autoPlayBtn.disabled = false;
         
         this.stats.classList.remove('hidden');
-        this.giftMovementPanel.classList.remove('hidden');
     }
     
     stepForward() {
@@ -388,7 +394,7 @@ class UIController {
         `;
         
         this.stats.classList.add('hidden');
-        this.giftMovementPanel.classList.add('hidden');
+        this.clearVisualizationContents();
         this.updateMatrix();
     }
     
@@ -829,6 +835,46 @@ class UIController {
         
         // Fallback: return first few words
         return actionText.split(' ').slice(0, 2).join(' ');
+    }
+    
+    switchTab(tabName) {
+        // Remove active class from all tabs and content
+        this.movementTab.classList.remove('active');
+        this.matrixTab.classList.remove('active');
+        this.movementTabContent.classList.remove('active');
+        this.matrixTabContent.classList.remove('active');
+        
+        // Add active class to selected tab and content
+        if (tabName === 'movement') {
+            this.movementTab.classList.add('active');
+            this.movementTabContent.classList.add('active');
+        } else if (tabName === 'matrix') {
+            this.matrixTab.classList.add('active');
+            this.matrixTabContent.classList.add('active');
+        }
+    }
+    
+    clearVisualizationContents() {
+        // Clear movement visualization
+        if (this.giftMovementContainer) {
+            this.giftMovementContainer.innerHTML = `
+                <div style="text-align: center; margin-top: 100px; color: #7f8c8d; font-size: 1.1rem;">
+                    🎁 Click "Run New Simulation" to see gift movements!
+                </div>
+            `;
+        }
+        
+        // Clear matrix content (matrix body will be cleared by updateMatrix)
+        const matrixBody = document.getElementById('matrixBody');
+        if (matrixBody) {
+            matrixBody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.1rem;">
+                        📋 Matrix will appear here after running a simulation
+                    </td>
+                </tr>
+            `;
+        }
     }
 }
 
