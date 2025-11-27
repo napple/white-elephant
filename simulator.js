@@ -1,29 +1,69 @@
 // White Elephant Gift Exchange Simulator in JavaScript
 class WhiteElephantSimulator {
-    constructor() {
-        this.gifts = [
-            { id: 1, name: "Bluetooth Speaker", value: 85, steals: 0, locked: false },
-            { id: 2, name: "Luxury Candle Set", value: 60, steals: 0, locked: false },
-            { id: 3, name: "Board Game Collection", value: 75, steals: 0, locked: false },
-            { id: 4, name: "Electric Wine Opener", value: 50, steals: 0, locked: false },
-            { id: 5, name: "Cozy Throw Blanket", value: 70, steals: 0, locked: false },
-            { id: 6, name: "Gourmet Coffee Set", value: 55, steals: 0, locked: false },
-            { id: 7, name: "Portable Phone Charger", value: 90, steals: 0, locked: false },
-            { id: 8, name: "Kitchen Gadget Bundle", value: 65, steals: 0, locked: false },
-        ];
-        
+    constructor(config = {}) {
+        // Apply configuration with defaults
+        this.config = {
+            numPlayers: config.numPlayers || 8,
+            numGifts: config.numGifts || 8,
+            lockThreshold: config.lockThreshold || 3,
+            highValueThreshold: config.highValueThreshold || 75,
+            mediumValueThreshold: config.mediumValueThreshold || 65,
+            highStealChance: config.highStealChance !== undefined ? config.highStealChance : 0.8,
+            mediumStealChance: config.mediumStealChance !== undefined ? config.mediumStealChance : 0.6,
+            lowStealChance: config.lowStealChance !== undefined ? config.lowStealChance : 0.3,
+            gifts: config.gifts || null
+        };
+
+        // Initialize gifts
+        if (this.config.gifts && this.config.gifts.length === this.config.numGifts) {
+            this.gifts = this.config.gifts.map((g, idx) => ({
+                id: idx + 1,
+                name: g.name,
+                value: g.value,
+                steals: 0,
+                locked: false
+            }));
+        } else {
+            this.gifts = this.generateDefaultGifts(this.config.numGifts);
+        }
+
+        // Initialize players
         this.players = [];
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= this.config.numPlayers; i++) {
             this.players.push(`P${i}`);
         }
-        
+
         this.playerGifts = {};
         this.gameLog = [];
         this.actionStates = [];
         this.availableGiftIds = [];
         this.openedGifts = [];
-        
+
         this.reset();
+    }
+
+    generateDefaultGifts(numGifts) {
+        const giftNames = [
+            "Bluetooth Speaker", "Luxury Candle Set", "Board Game Collection",
+            "Electric Wine Opener", "Cozy Throw Blanket", "Gourmet Coffee Set",
+            "Portable Phone Charger", "Kitchen Gadget Bundle", "Wireless Earbuds",
+            "Smart LED Bulbs", "Cocktail Shaker Set", "Desk Organizer",
+            "Plant Terrarium Kit", "Massage Gun", "Insulated Tumbler",
+            "Photo Frame Set", "Scented Bath Bombs", "Puzzle Set",
+            "Notebook & Pen Set", "Travel Mug"
+        ];
+
+        const gifts = [];
+        for (let i = 0; i < numGifts; i++) {
+            gifts.push({
+                id: i + 1,
+                name: giftNames[i % giftNames.length] + (i >= giftNames.length ? ` #${Math.floor(i / giftNames.length) + 1}` : ''),
+                value: Math.floor(Math.random() * 50) + 50, // Random value 50-99
+                steals: 0,
+                locked: false
+            });
+        }
+        return gifts;
     }
     
     reset() {
@@ -32,19 +72,19 @@ class WhiteElephantSimulator {
             gift.steals = 0;
             gift.locked = false;
         });
-        
+
         // Reset player assignments
         this.playerGifts = {};
         this.players.forEach(player => {
             this.playerGifts[player] = null;
         });
-        
+
         // Reset game state
         this.gameLog = [];
         this.actionStates = [];
-        this.availableGiftIds = [1, 2, 3, 4, 5, 6, 7, 8];
+        this.availableGiftIds = this.gifts.map(g => g.id);
         this.openedGifts = [];
-        
+
         // Add initial state
         this.captureGameState("Initial State - All Gifts Wrapped", false);
     }
@@ -61,28 +101,27 @@ class WhiteElephantSimulator {
             stealTransition: stealTransition, // { from: "Player X", to: "Player Y" }
             gifts: {}
         };
-        
+
         // Capture state for each gift
-        for (let i = 1; i <= 8; i++) {
-            const gift = this.getGiftById(i);
+        this.gifts.forEach(gift => {
             let owner = null;
-            
+
             // Find who owns this gift
             for (const [player, playerGift] of Object.entries(this.playerGifts)) {
-                if (playerGift && playerGift.id === i) {
+                if (playerGift && playerGift.id === gift.id) {
                     owner = player;
                     break;
                 }
             }
-            
-            state.gifts[i] = {
+
+            state.gifts[gift.id] = {
                 owner: owner,
                 steals: gift.steals,
                 locked: gift.locked,
                 opened: owner !== null || gift.steals > 0
             };
-        }
-        
+        });
+
         this.actionStates.push(state);
         return state;
     }
@@ -91,37 +130,37 @@ class WhiteElephantSimulator {
         if (openedGifts.length === 0) {
             return null; // Must pick new gift
         }
-        
+
         // Find stealable gifts (not locked, not the one they just had stolen)
-        const stealable = openedGifts.filter(g => 
-            !g.locked && 
+        const stealable = openedGifts.filter(g =>
+            !g.locked &&
             g !== justStolenGift
         );
-        
+
         if (stealable.length === 0 || availableGiftIds.length === 0) {
             if (stealable.length === 0) {
                 return null; // No stealable gifts, must pick new
             }
             // No wrapped gifts left, must steal
-            return stealable.reduce((best, current) => 
+            return stealable.reduce((best, current) =>
                 current.value > best.value ? current : best
             );
         }
-        
+
         // Strategy: weighted decision based on gift value
-        const bestAvailable = stealable.reduce((best, current) => 
+        const bestAvailable = stealable.reduce((best, current) =>
             current.value > best.value ? current : best
         );
-        
+
         let stealChance;
-        if (bestAvailable.value >= 75) {
-            stealChance = 0.8; // 80% chance for high value
-        } else if (bestAvailable.value >= 65) {
-            stealChance = 0.6; // 60% chance for medium-high value
+        if (bestAvailable.value >= this.config.highValueThreshold) {
+            stealChance = this.config.highStealChance;
+        } else if (bestAvailable.value >= this.config.mediumValueThreshold) {
+            stealChance = this.config.mediumStealChance;
         } else {
-            stealChance = 0.3; // 30% chance for lower value
+            stealChance = this.config.lowStealChance;
         }
-        
+
         if (Math.random() < stealChance) {
             return bestAvailable;
         }
@@ -204,29 +243,29 @@ class WhiteElephantSimulator {
     
     executeSteal(stealer, targetGift, turnLog) {
         const victim = this.findGiftOwner(targetGift);
-        
+
         if (victim) {
             // Update steal count and lock status
             targetGift.steals += 1;
-            if (targetGift.steals >= 3) {
+            if (targetGift.steals >= this.config.lockThreshold) {
                 targetGift.locked = true;
             }
-            
+
             // Transfer the gift
             this.playerGifts[stealer] = targetGift;
             this.playerGifts[victim] = null;
-            
+
             const actionDesc = `${stealer} steals G${targetGift.id}: ${targetGift.name} from ${victim}`;
             turnLog.push(`  ${actionDesc}`);
-            
+
             // Capture state with steal transition info
             const stealTransition = { from: victim, to: stealer };
             this.captureGameState(actionDesc, false, targetGift.id, stealTransition);
-            
+
             if (targetGift.locked) {
-                turnLog.push(`    G${targetGift.id} is now LOCKED (3 steals)`);
+                turnLog.push(`    G${targetGift.id} is now LOCKED (${this.config.lockThreshold} steals)`);
             }
-            
+
             return victim; // Return the victim who now needs a gift
         }
         return null;
@@ -234,9 +273,9 @@ class WhiteElephantSimulator {
     
     runFullSimulation() {
         this.reset();
-        
-        // Execute all 8 turns
-        for (let i = 0; i < 8; i++) {
+
+        // Execute all player turns
+        for (let i = 0; i < this.config.numPlayers; i++) {
             this.executeTurn(i);
         }
         
@@ -277,17 +316,21 @@ class WhiteElephantSimulator {
 // UI Controller
 class UIController {
     constructor() {
-        this.simulator = new WhiteElephantSimulator();
         this.currentStateIndex = 0;
         this.isAutoPlaying = false;
         this.autoPlayInterval = null;
-        
+
         this.initializeElements();
         this.bindEvents();
+        this.initializeConfiguration();
+
+        // Create simulator with default configuration
+        this.simulator = new WhiteElephantSimulator(this.getConfiguration());
+
         this.clearVisualizationContents();
         this.updateMatrix();
     }
-    
+
     initializeElements() {
         this.simulateBtn = document.getElementById('simulateBtn');
         this.stepBtn = document.getElementById('stepBtn');
@@ -306,6 +349,21 @@ class UIController {
         this.matrixTab = document.getElementById('matrixTab');
         this.movementTabContent = document.getElementById('movementTabContent');
         this.matrixTabContent = document.getElementById('matrixTabContent');
+
+        // Configuration elements
+        this.configBtn = document.getElementById('configBtn');
+        this.closeConfigBtn = document.getElementById('closeConfigBtn');
+        this.configPanel = document.getElementById('configPanel');
+        this.numPlayers = document.getElementById('numPlayers');
+        this.lockThreshold = document.getElementById('lockThreshold');
+        this.autoPlaySpeed = document.getElementById('autoPlaySpeed');
+        this.highValueThreshold = document.getElementById('highValueThreshold');
+        this.mediumValueThreshold = document.getElementById('mediumValueThreshold');
+        this.highStealChance = document.getElementById('highStealChance');
+        this.mediumStealChance = document.getElementById('mediumStealChance');
+        this.lowStealChance = document.getElementById('lowStealChance');
+        this.generateGiftsBtn = document.getElementById('generateGiftsBtn');
+        this.giftsList = document.getElementById('giftsList');
     }
     
     bindEvents() {
@@ -316,22 +374,31 @@ class UIController {
         this.movementTab.addEventListener('click', () => this.switchTab('movement'));
         this.matrixTab.addEventListener('click', () => this.switchTab('matrix'));
         window.addEventListener('resize', () => this.handleResize());
+
+        // Configuration events
+        this.configBtn.addEventListener('click', () => this.toggleConfiguration());
+        this.closeConfigBtn.addEventListener('click', () => this.toggleConfiguration());
+        this.generateGiftsBtn.addEventListener('click', () => this.generateRandomGifts());
+        this.numPlayers.addEventListener('change', () => this.updateGiftsList());
     }
     
     runSimulation() {
+        // Recreate simulator with current configuration
+        this.simulator = new WhiteElephantSimulator(this.getConfiguration());
+
         const result = this.simulator.runFullSimulation();
         this.currentStateIndex = 0;
-        
+
         this.updateGameLog(result);
         this.initializeGiftMovementView();
         this.updateMatrix();
         this.updateGiftMovementView();
         this.updateStats(result.stats);
-        
+
         this.simulateBtn.disabled = true;
         this.stepBtn.disabled = false;
         this.autoPlayBtn.disabled = false;
-        
+
         this.stats.classList.remove('hidden');
     }
     
@@ -361,10 +428,11 @@ class UIController {
         this.isAutoPlaying = true;
         this.autoPlayBtn.textContent = '⏸️  Pause';
         this.stepBtn.disabled = true;
-        
+
+        const speed = parseInt(this.autoPlaySpeed.value) || 150;
         this.autoPlayInterval = setInterval(() => {
             this.stepForward();
-        }, 150);
+        }, speed);
     }
     
     stopAutoPlay() {
@@ -380,20 +448,23 @@ class UIController {
     
     reset() {
         this.stopAutoPlay();
-        this.simulator.reset();
+
+        // Recreate simulator with current configuration
+        this.simulator = new WhiteElephantSimulator(this.getConfiguration());
+
         this.currentStateIndex = 0;
-        
+
         this.simulateBtn.disabled = false;
         this.stepBtn.disabled = true;
         this.autoPlayBtn.disabled = true;
         this.autoPlayBtn.textContent = '▶️  Auto Play';
-        
+
         this.gameLog.innerHTML = `
             <div style="text-align: center; margin-top: 150px; color: #7f8c8d;">
                 Click "Run New Simulation" to start a White Elephant game!
             </div>
         `;
-        
+
         this.stats.classList.add('hidden');
         this.clearVisualizationContents();
         this.updateMatrix();
@@ -451,14 +522,25 @@ class UIController {
     }
     
     updateMatrix() {
+        // Update table headers dynamically
+        const matrixTable = document.getElementById('matrixTable');
+        const thead = matrixTable.querySelector('thead tr');
+        thead.innerHTML = '<th style="min-width: 200px;">Action</th>';
+
+        this.simulator.gifts.forEach(gift => {
+            const th = document.createElement('th');
+            th.textContent = `G${gift.id}`;
+            thead.appendChild(th);
+        });
+
         const tbody = this.matrixBody;
         tbody.innerHTML = '';
-        
+
         // Show states up to current index
         for (let i = 0; i <= this.currentStateIndex; i++) {
             const state = this.simulator.actionStates[i];
             const row = document.createElement('tr');
-            
+
             // Action cell
             const actionCell = document.createElement('td');
             actionCell.className = 'action-cell';
@@ -467,15 +549,16 @@ class UIController {
             }
             actionCell.textContent = state.action;
             row.appendChild(actionCell);
-            
+
             // Gift cells - only if not a turn start
             if (!state.isTurnStart) {
-                for (let giftId = 1; giftId <= 8; giftId++) {
+                this.simulator.gifts.forEach(gift => {
+                    const giftId = gift.id;
                     const cell = document.createElement('td');
                     cell.className = 'gift-cell';
-                    
+
                     const giftState = state.gifts[giftId];
-                    
+
                     // Determine cell class based on state
                     if (!giftState.owner) {
                         cell.classList.add('gift-wrapped');
@@ -488,22 +571,22 @@ class UIController {
                     } else {
                         cell.classList.add('gift-opened');
                     }
-                    
+
                     // Always highlight if this gift changed in this action
                     if (state.changedGiftId === giftId) {
                         cell.classList.add('gift-highlighted');
                     }
-                    
+
                     // Gift number
                     const giftNumber = document.createElement('div');
                     giftNumber.className = 'gift-number';
                     giftNumber.textContent = `G${giftId}`;
                     cell.appendChild(giftNumber);
-                    
+
                     // Owner - show steal transition if this is a steal action for this gift
                     const owner = document.createElement('div');
                     owner.className = 'gift-owner';
-                    
+
                     if (state.stealTransition && state.changedGiftId === giftId) {
                         // Show steal transition: P5 → P2 (already in PN format from players array)
                         const fromPlayer = state.stealTransition.from;
@@ -514,7 +597,7 @@ class UIController {
                         owner.textContent = giftState.owner ? giftState.owner : '—';
                     }
                     cell.appendChild(owner);
-                    
+
                     // Steal count
                     if (giftState.steals > 0) {
                         const steals = document.createElement('div');
@@ -525,18 +608,18 @@ class UIController {
                         steals.textContent = `×${giftState.steals}`;
                         cell.appendChild(steals);
                     }
-                    
+
                     row.appendChild(cell);
-                }
+                });
             } else {
                 // For turn start rows, create one cell that spans all gift columns
                 const turnCell = document.createElement('td');
-                turnCell.colSpan = 8;
+                turnCell.colSpan = this.simulator.gifts.length;
                 turnCell.className = 'turn-start';
                 turnCell.textContent = ''; // Empty content since action already shows the turn
                 row.appendChild(turnCell);
             }
-            
+
             tbody.appendChild(row);
         }
     }
@@ -557,18 +640,18 @@ class UIController {
     
     initializeGiftMovementView() {
         this.giftMovementContainer.innerHTML = '';
-        
+
         // Create header with player names
         const header = document.createElement('div');
         header.className = 'movement-header';
-        
-        for (let i = 1; i <= 8; i++) {
+
+        this.simulator.players.forEach(player => {
             const playerCell = document.createElement('div');
             playerCell.className = 'player-header-cell';
-            playerCell.textContent = `P${i}`;
+            playerCell.textContent = player;
             header.appendChild(playerCell);
-        }
-        
+        });
+
         this.giftMovementContainer.appendChild(header);
         
         // Create container for rows
@@ -633,43 +716,43 @@ class UIController {
     createMovementRow(state, stateIndex) {
         const rowsContainer = document.getElementById('movementRows');
         const svg = document.getElementById('movementArrowSvg');
-        
+
         const row = document.createElement('div');
         row.className = 'movement-row';
         row.id = `movement-row-${stateIndex}`;
-        
+
         // Action label
         const actionLabel = document.createElement('div');
         actionLabel.className = 'action-label';
         actionLabel.textContent = this.getActionDescription(state.action);
         row.appendChild(actionLabel);
-        
+
         // Gift positions container
         const positions = document.createElement('div');
         positions.className = 'gift-positions';
-        
-        // Create 8 position cells (one for each player)
-        for (let playerNum = 1; playerNum <= 8; playerNum++) {
+
+        // Create position cells (one for each player)
+        this.simulator.players.forEach((player, playerIndex) => {
             const cell = document.createElement('div');
             cell.className = 'position-cell';
-            cell.id = `row-${stateIndex}-player-${playerNum}`;
-            
+            cell.id = `row-${stateIndex}-player-${playerIndex + 1}`;
+
             // Find all gifts owned by this player in this state
             const playerGifts = [];
-            for (let giftId = 1; giftId <= 8; giftId++) {
-                const giftState = state.gifts[giftId];
-                if (giftState.owner === `P${playerNum}`) {
-                    playerGifts.push({ id: giftId, ...giftState });
+            this.simulator.gifts.forEach(gift => {
+                const giftState = state.gifts[gift.id];
+                if (giftState.owner === player) {
+                    playerGifts.push({ id: gift.id, ...giftState });
                 }
-            }
-            
+            });
+
             // Add gift tokens for this player
             playerGifts.forEach(gift => {
                 const token = document.createElement('div');
                 token.className = 'gift-token';
                 token.id = `row-${stateIndex}-gift-${gift.id}`;
                 token.textContent = `G${gift.id}`;
-                
+
                 // Apply styling based on steal count
                 if (gift.locked) {
                     token.classList.add('locked');
@@ -678,20 +761,20 @@ class UIController {
                 } else if (gift.steals === 1) {
                     token.classList.add('stolen-once');
                 }
-                
+
                 // Highlight if this is the changed gift
                 if (state.changedGiftId === gift.id) {
                     token.classList.add('highlighted');
                 }
-                
+
                 cell.appendChild(token);
             });
-            
+
             positions.appendChild(cell);
-        }
-        
+        });
+
         row.appendChild(positions);
-        
+
         // Insert before the SVG
         rowsContainer.insertBefore(row, svg);
     }
@@ -864,7 +947,7 @@ class UIController {
                 </div>
             `;
         }
-        
+
         // Clear matrix content (matrix body will be cleared by updateMatrix)
         const matrixBody = document.getElementById('matrixBody');
         if (matrixBody) {
@@ -875,6 +958,130 @@ class UIController {
                     </td>
                 </tr>
             `;
+        }
+    }
+
+    // Configuration methods
+    initializeConfiguration() {
+        // Start with configuration hidden
+        this.configPanel.classList.remove('visible');
+
+        // Initialize gifts list with default 8 gifts
+        this.updateGiftsList();
+    }
+
+    toggleConfiguration() {
+        this.configPanel.classList.toggle('visible');
+    }
+
+    getConfiguration() {
+        const numPlayers = parseInt(this.numPlayers.value) || 8;
+
+        // Read gifts from the gifts list
+        const giftInputs = this.giftsList.querySelectorAll('.gift-item');
+        const gifts = [];
+        giftInputs.forEach((item, index) => {
+            const nameInput = item.querySelector('input[type="text"]');
+            const valueInput = item.querySelector('input[type="number"]');
+            if (nameInput && valueInput) {
+                gifts.push({
+                    name: nameInput.value || `Gift ${index + 1}`,
+                    value: parseInt(valueInput.value) || 50
+                });
+            }
+        });
+
+        return {
+            numPlayers: numPlayers,
+            numGifts: numPlayers, // Always equal to number of players
+            lockThreshold: parseInt(this.lockThreshold.value) || 3,
+            highValueThreshold: parseInt(this.highValueThreshold.value) || 75,
+            mediumValueThreshold: parseInt(this.mediumValueThreshold.value) || 65,
+            highStealChance: parseFloat(this.highStealChance.value) || 0.8,
+            mediumStealChance: parseFloat(this.mediumStealChance.value) || 0.6,
+            lowStealChance: parseFloat(this.lowStealChance.value) || 0.3,
+            gifts: gifts.length === numPlayers ? gifts : null
+        };
+    }
+
+    updateGiftsList() {
+        const numPlayers = parseInt(this.numPlayers.value) || 8;
+
+        // Get existing gift values if any
+        const existingGifts = [];
+        const giftInputs = this.giftsList.querySelectorAll('.gift-item');
+        giftInputs.forEach(item => {
+            const nameInput = item.querySelector('input[type="text"]');
+            const valueInput = item.querySelector('input[type="number"]');
+            if (nameInput && valueInput) {
+                existingGifts.push({
+                    name: nameInput.value,
+                    value: parseInt(valueInput.value)
+                });
+            }
+        });
+
+        // Clear and repopulate
+        this.giftsList.innerHTML = '';
+
+        // Create default gift names
+        const defaultGiftNames = [
+            "Bluetooth Speaker", "Luxury Candle Set", "Board Game Collection",
+            "Electric Wine Opener", "Cozy Throw Blanket", "Gourmet Coffee Set",
+            "Portable Phone Charger", "Kitchen Gadget Bundle", "Wireless Earbuds",
+            "Smart LED Bulbs", "Cocktail Shaker Set", "Desk Organizer",
+            "Plant Terrarium Kit", "Massage Gun", "Insulated Tumbler",
+            "Photo Frame Set", "Scented Bath Bombs", "Puzzle Set",
+            "Notebook & Pen Set", "Travel Mug"
+        ];
+
+        for (let i = 0; i < numPlayers; i++) {
+            const giftItem = document.createElement('div');
+            giftItem.className = 'gift-item';
+
+            const name = existingGifts[i]?.name || defaultGiftNames[i % defaultGiftNames.length];
+            const value = existingGifts[i]?.value || (Math.floor(Math.random() * 50) + 50);
+
+            giftItem.innerHTML = `
+                <input type="text" placeholder="Gift Name" value="${name}">
+                <input type="number" placeholder="Value" min="1" max="1000" value="${value}">
+                <span style="color: #666; font-size: 0.8rem;">G${i + 1}</span>
+            `;
+
+            this.giftsList.appendChild(giftItem);
+        }
+    }
+
+    generateRandomGifts() {
+        const numPlayers = parseInt(this.numPlayers.value) || 8;
+
+        // Clear and repopulate with random values
+        this.giftsList.innerHTML = '';
+
+        const defaultGiftNames = [
+            "Bluetooth Speaker", "Luxury Candle Set", "Board Game Collection",
+            "Electric Wine Opener", "Cozy Throw Blanket", "Gourmet Coffee Set",
+            "Portable Phone Charger", "Kitchen Gadget Bundle", "Wireless Earbuds",
+            "Smart LED Bulbs", "Cocktail Shaker Set", "Desk Organizer",
+            "Plant Terrarium Kit", "Massage Gun", "Insulated Tumbler",
+            "Photo Frame Set", "Scented Bath Bombs", "Puzzle Set",
+            "Notebook & Pen Set", "Travel Mug"
+        ];
+
+        for (let i = 0; i < numPlayers; i++) {
+            const giftItem = document.createElement('div');
+            giftItem.className = 'gift-item';
+
+            const name = defaultGiftNames[i % defaultGiftNames.length] + (i >= defaultGiftNames.length ? ` #${Math.floor(i / defaultGiftNames.length) + 1}` : '');
+            const value = Math.floor(Math.random() * 50) + 50; // Random value 50-99
+
+            giftItem.innerHTML = `
+                <input type="text" placeholder="Gift Name" value="${name}">
+                <input type="number" placeholder="Value" min="1" max="1000" value="${value}">
+                <span style="color: #666; font-size: 0.8rem;">G${i + 1}</span>
+            `;
+
+            this.giftsList.appendChild(giftItem);
         }
     }
     

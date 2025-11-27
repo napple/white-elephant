@@ -112,9 +112,18 @@
             background: linear-gradient(135deg, #c9182c 0%, #782832 100%);
             box-shadow: 0 4px 15px rgba(201, 24, 44, 0.3);
         }
-        
+
         .btn-reset:hover {
             box-shadow: 0 8px 25px rgba(201, 24, 44, 0.4);
+        }
+
+        .btn-config {
+            background: linear-gradient(135deg, #386641 0%, #6a994e 100%);
+            box-shadow: 0 4px 15px rgba(56, 102, 65, 0.3);
+        }
+
+        .btn-config:hover {
+            box-shadow: 0 8px 25px rgba(56, 102, 65, 0.4);
         }
         
         .main-content {
@@ -452,13 +461,9 @@
         }
         
         .player-header-cell {
-            background: #782832;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
+            color: #782832;
             font-weight: 600;
             font-size: 0.9rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             flex: 1;
             text-align: center;
             margin: 0 2px;
@@ -577,27 +582,201 @@
             text-anchor: middle;
         }
         
+        .config-panel {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            display: none;
+        }
+
+        .config-panel.visible {
+            display: block;
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 10px;
+        }
+
+        .config-header h3 {
+            font-size: 1.3rem;
+            color: #386641;
+            margin: 0;
+        }
+
+        .config-note {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .config-footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+        }
+
+        .btn-close-config {
+            background: linear-gradient(135deg, #386641 0%, #6a994e 100%);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(56, 102, 65, 0.3);
+        }
+
+        .btn-close-config:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 102, 65, 0.4);
+        }
+
+        .config-content {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .config-group {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .config-group h4 {
+            color: #782832;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .config-field {
+            margin-bottom: 15px;
+        }
+
+        .config-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .config-field input[type="number"],
+        .config-field input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+
+        .config-field input[type="number"]:focus,
+        .config-field input[type="text"]:focus {
+            outline: none;
+            border-color: #6a994e;
+        }
+
+        .config-field small {
+            display: block;
+            margin-top: 3px;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .gifts-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .gift-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .gift-item input {
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            background: #c9182c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-small:hover {
+            background: #782832;
+        }
+
+        .btn-add {
+            background: #6a994e;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            background: #386641;
+        }
+
+        .btn-generate {
+            background: #6a994e;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-generate:hover {
+            background: #386641;
+        }
+
         @media (max-width: 768px) {
             .bottom-panels {
                 flex-direction: column;
             }
-            
+
             .game-panel,
             .stats-panel {
                 border-right: none;
                 border-bottom: 1px solid #eee;
             }
-            
+
             .control-group {
                 flex-direction: column;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .matrix-container {
                 height: 400px;
+            }
+
+            .config-content {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -608,13 +787,82 @@
             <h1>🎁 White Elephant Gift Exchange 🎅</h1>
             <p>Interactive Simulator with Real-time Matrix Visualization</p>
         </div>
-        
+
+        <div class="config-panel" id="configPanel">
+            <div class="config-header">
+                <h3>⚙️ Configuration</h3>
+                <span class="config-note">Settings are automatically saved</span>
+            </div>
+            <div class="config-content">
+                <div class="config-group">
+                    <h4>🎮 Game Settings</h4>
+                    <div class="config-field">
+                        <label for="numPlayers">Number of Players/Gifts</label>
+                        <input type="number" id="numPlayers" min="2" max="20" value="8">
+                        <small>Each player brings one gift (2-20)</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="lockThreshold">Lock Threshold</label>
+                        <input type="number" id="lockThreshold" min="1" max="10" value="3">
+                        <small>Gifts lock after this many steals</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="autoPlaySpeed">Auto-Play Speed (ms)</label>
+                        <input type="number" id="autoPlaySpeed" min="50" max="2000" value="150" step="50">
+                        <small>Delay between steps in auto-play mode</small>
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <h4>🎯 Steal Probability</h4>
+                    <div class="config-field">
+                        <label for="highValueThreshold">High Value Threshold</label>
+                        <input type="number" id="highValueThreshold" min="1" max="1000" value="75">
+                        <small>Gifts with value ≥ this are high value</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="mediumValueThreshold">Medium Value Threshold</label>
+                        <input type="number" id="mediumValueThreshold" min="1" max="1000" value="65">
+                        <small>Gifts with value ≥ this are medium value</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="highStealChance">High Value Steal Chance</label>
+                        <input type="number" id="highStealChance" min="0" max="1" step="0.1" value="0.8">
+                        <small>Probability of stealing high value gifts (0-1)</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="mediumStealChance">Medium Value Steal Chance</label>
+                        <input type="number" id="mediumStealChance" min="0" max="1" step="0.1" value="0.6">
+                        <small>Probability of stealing medium value gifts (0-1)</small>
+                    </div>
+                    <div class="config-field">
+                        <label for="lowStealChance">Low Value Steal Chance</label>
+                        <input type="number" id="lowStealChance" min="0" max="1" step="0.1" value="0.3">
+                        <small>Probability of stealing low value gifts (0-1)</small>
+                    </div>
+                </div>
+
+                <div class="config-group" style="grid-column: 1 / -1;">
+                    <h4>🎁 Gifts Configuration</h4>
+                    <button class="btn-generate" id="generateGiftsBtn">Generate Random Gifts</button>
+                    <div class="gifts-list" id="giftsList">
+                        <!-- Gift items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-footer">
+                <button id="closeConfigBtn" class="btn-close-config">✓ Close Settings</button>
+            </div>
+        </div>
+
         <div class="controls">
             <div class="control-group">
                 <button id="simulateBtn" class="btn">🎮  Run New Simulation</button>
                 <button id="stepBtn" class="btn" disabled>👣  Step Through</button>
                 <button id="autoPlayBtn" class="btn" disabled>▶️  Auto Play</button>
                 <button id="resetBtn" class="btn btn-reset">🔄  Reset</button>
+                <button id="configBtn" class="btn btn-config" title="Configuration">⚙️  Settings</button>
             </div>
         </div>
         
@@ -675,7 +923,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color gift-locked"></div>
-                        <span>Locked (3 steals)</span>
+                        <span>Locked</span>
                     </div>
                 </div>
             </div>
